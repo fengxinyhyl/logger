@@ -15,5 +15,10 @@
             "email": "fengxinyhyl@gmail.com"
         }
     ],
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Logger\\": "src/"
+        }
+    }
 }

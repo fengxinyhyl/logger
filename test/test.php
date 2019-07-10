@@ -8,4 +8,10 @@
 
 require_once '../vendor/autoload.php';
 
-$logger = new \Logger\Logger();
+$config = require('config.php');
+var_dump($config);
+try{
+    $logger = \Logger\Logger::getLogger($config);
+}catch (\Logger\LoggerException $e){
+    var_dump($e->getMessage());
+}
