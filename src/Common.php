@@ -51,7 +51,7 @@ class Common
      */
     public function getRequestId()
     {
-        if($this->requestId){
+        if ($this->requestId) {
             return $this->requestId;
         }
         // @todo 从header取传递过来的requestId
@@ -82,22 +82,22 @@ class Common
         $date          = date('Ym/d');
         $hour          = date('H');
         $currentLogDir = $logDir . '/' . $date;
-        var_dump($currentLogDir);
+
         if (!is_dir($currentLogDir)) {
             $mkRet = mkdir($currentLogDir, 0755, true);
-            if(empty($mkRet)){
+            if (empty($mkRet)) {
                 return $tmpLog;
             }
 
             // 删除三个月之前的日志
             $beforeThreeMonth = date('Ym/d', strtotime('-3 months'));
-            $deleteDir = $logDir . '/' . $beforeThreeMonth;
+            $deleteDir        = $logDir . '/' . $beforeThreeMonth;
             @$this->delDir($deleteDir);
 
             if ($mkRet) {
                 return $currentLogDir . '/' . $hour . '.log';
             }
-            return $logDir.'/tmp.log';
+            return $logDir . '/tmp.log';
         } else {
             return $currentLogDir . '/' . $hour . '.log';
         }

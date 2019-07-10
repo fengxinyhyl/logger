@@ -41,7 +41,7 @@ return array(
             'fengxinyhyl@qq.com',
         ),
         // 是否开启常规提醒，开启后出现error,critical类型错误会发送提醒邮件
-        'normalRemind'  => false,
+        'normalRemind'  => true,
         // 常规提醒的时间间隔(秒)
         'normalInterval' => 86400,
     ),
@@ -52,10 +52,11 @@ return array(
      * 每小时至多发送5条
      */
     'smsConfig' => array(
-        'phone' => array(
+        'phones' => array(
             18362705640
         ),
-        'alertCondition' => 10,
+        // 发送条件必须为正整数，默认为10
+        'alertCondition' => 3,
     ),
 
     /**

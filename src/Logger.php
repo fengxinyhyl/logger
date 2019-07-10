@@ -117,7 +117,7 @@ class Logger
      * 每小时至多发送5条
      */
     private $smsConfig = array(
-        'phone'          => array(),
+        'phones'         => array(),
         'alertCondition' => 10,
     );
 
@@ -280,12 +280,12 @@ class Logger
         // 5.短信报警
         if (isset($config['smsConfig']) and is_array($config['smsConfig'])) {
             $sms = $config['smsConfig'];
-            if (isset($sms['phone']) and is_array($sms['phone']) and $sms['phone']) {
-                $this->smsConfig['phone'] = $sms['phone'];
+            if (isset($sms['phones']) and is_array($sms['phones']) and $sms['phones']) {
+                $this->smsConfig['phones'] = $sms['phones'];
             } else {
                 throw new LoggerException('配置信息，短信报警手机号不合法');
             }
-            if (isset($sms['alertCondition']) and is_numeric($sms['alertCondition'])) {
+            if (isset($sms['alertCondition']) and is_numeric($sms['alertCondition']) and $sms['alertCondition'] > 1) {
                 $this->smsConfig['alertCondition'] = $sms['alertCondition'];
             }
         } else {
@@ -393,50 +393,50 @@ class Logger
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->error($msg, array('context' => $content));
-        $redis = $this->getRedis();
-        if ($redis) {
-            if($this->emailConfig['normalRemind']){
-                $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
-                    $this->emailConfig['normalInterval'], 'error', $content,
-                    $this->getCommonSDK()->getRequestId());
-            }
-
-        }
+        $this->errorHandel('error', $msg . $content);
     }
 
     public function critical($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->critical($msg, array('context' => $content));
-        $redis = $this->getRedis();
-        if ($redis and $this->emailConfig['normalRemind']) {
-            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
-                $this->emailConfig['normalInterval'], 'critical', $content,
-                $this->getCommonSDK()->getRequestId());
-        }
+        $this->errorHandel('critical', $msg . $content);
     }
 
     public function alert($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->alert($msg, array('context' => $content));
-        $redis = $this->getRedis();
-        if ($redis and $this->emailConfig['normalRemind']) {
-            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
-                $this->emailConfig['normalInterval'], 'alert', $content,
-                $this->getCommonSDK()->getRequestId());
-        }
+        $this->errorHandel('alert', $msg . $content);
     }
 
     public function emergency($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->emergency($msg, array('context' => $content));
+        $this->errorHandel('emergency', $msg . $content);
+
+    }
+
+    /**
+     * notes: 发生错误处理方法
+     * @param $type
+     * @param $content
+     * @create: 2019/7/10 17:10
+     * @update: 2019/7/10 17:10
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    private function errorHandel($type, $content)
+    {
         $redis = $this->getRedis();
-        if ($redis and $this->emailConfig['normalRemind']) {
-            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
-                $this->emailConfig['normalInterval'], 'emergency', $content,
-                $this->getCommonSDK()->getRequestId());
+        if ($redis) {
+            if ($this->emailConfig['normalRemind']) {
+                $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
+                    $this->emailConfig['normalInterval'], $type, $content,
+                    $this->getCommonSDK()->getRequestId());
+            }
+            $this->getSmsSDK()->sendSms($redis, $this->smsConfig['phones'], $this->smsConfig['alertCondition']);
         }
     }
 
@@ -756,12 +756,13 @@ class Logger
      * @author: zhangkaixiang
      * @editor:
      */
-    private function getSmsSDK(){
+    private function getSmsSDK()
+    {
         if (isset($this->smsSDK)) {
             return $this->smsSDK;
         }
 
-        $this->smsSDK = new Sms();
+        $this->smsSDK = new Sms($this->projectName);
         return $this->smsSDK;
     }
 }

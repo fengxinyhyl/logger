@@ -15,6 +15,8 @@ try{
     Logger::getLogger()->initLogger($config);
     Logger::getLogger()->info('bbbb');
     Logger::getLogger()->warn('aaaa');
+    Logger::getLogger()->error('ccc');
+    Logger::getLogger()->critical('ccc');
 }catch (\Logger\LoggerException $e){
     var_dump($e->getMessage());
 }

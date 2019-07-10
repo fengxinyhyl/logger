@@ -27,10 +27,10 @@ class Email
 
     public function __construct($projectName, $emailUsername, $emailPWD, $emailHost)
     {
-        $this->projectName = $projectName;
+        $this->projectName   = $projectName;
         $this->emailUsername = $emailUsername;
-        $this->emailPWD = $emailPWD;
-        $this->emailHost = $emailHost;
+        $this->emailPWD      = $emailPWD;
+        $this->emailHost     = $emailHost;
     }
 
 
@@ -46,16 +46,16 @@ class Email
      * @author: zhangkaixiang
      * @editor:
      */
-    public function sendSystemAlertEmail(\Redis $redis, array $emails, $interval,  $host)
+    public function sendSystemAlertEmail(\Redis $redis, array $emails, $interval, $host)
     {
         $cacheKey = $this->projectName . ':systemAlert';
         $exist    = $redis->get($cacheKey);
         if ($exist === false) {
             $body = date('Y-m-d H:i:s') . " redis: {$host}  连接失败。";
-            try{
-                $this->sendEmail('系统报警 ' , $body, $emails);
-            }catch (Exception $e){
-                Logger::getLogger()->info('邮件发送失败: '.$e->getMessage());
+            try {
+                $this->sendEmail('系统报警 ', $body, $emails);
+            } catch (Exception $e) {
+                Logger::getLogger()->info('邮件发送失败: ' . $e->getMessage());
             }
             $redis->set($cacheKey, '1', $interval);
         }
@@ -79,10 +79,10 @@ class Email
         if ($exist === false) {
             $body = date('Y-m-d H:i:s') . "系统发生错误。RequestId : " . $requestId . "。\n";
             $body .= "内容 : " . $content . "。";
-            try{
+            try {
                 $this->sendEmail($this->projectName . ' ' . $type, $body, $emails);
-            }catch (Exception $e){
-                Logger::getLogger()->error('邮件发送失败: '.$e->getMessage());
+            } catch (Exception $e) {
+                Logger::getLogger()->error('邮件发送失败: ' . $e->getMessage());
             }
             $redis->set($cacheKey, '1', $interval);
         }
@@ -109,9 +109,9 @@ class Email
         $mail->Port       = 465;                      // TCP port to connect to
         $mail->CharSet    = "utf-8";
         $mail->setFrom($this->emailUsername, $this->projectName);
-        $mail->AddReplyTo($this->emailUsername,$this->projectName);
+        $mail->AddReplyTo($this->emailUsername, $this->projectName);
 
-        if($emails){
+        if ($emails) {
             foreach ($emails as $email) {
                 $mail->addAddress($email, $email);                      // Add a recipient
             }
