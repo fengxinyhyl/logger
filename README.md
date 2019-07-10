@@ -14,7 +14,7 @@
 ### 3.额外的操作
   * 1.buildParams       // 添加请求的参数
   * 2.buildResponse     // 添加返回的数据
-  * 3.CacheException    // 捕获系统异常，邮件报警依赖此项
+  * 3.CacheException    // 捕获系统异常，报警依赖此项
  
 ### 4.错误级别定义：
  * 调试/DEBUG (100): 详细的调试信息。

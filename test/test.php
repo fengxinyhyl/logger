@@ -6,13 +6,15 @@
  * Time: 15:57
  */
 
+use Logger\Logger;
+
 require_once '../vendor/autoload.php';
 
 $config = require('config.php');
 try{
-    $logger = \Logger\Logger::getLogger($config);
-    \Logger\Logger::getLogger()->info('bbbb');
-    $logger->info('aaaaa');
+    Logger::getLogger()->initLogger($config);
+    Logger::getLogger()->info('bbbb');
+    Logger::getLogger()->warn('aaaa');
 }catch (\Logger\LoggerException $e){
     var_dump($e->getMessage());
 }

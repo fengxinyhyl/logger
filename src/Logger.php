@@ -56,13 +56,13 @@ class Logger
      * 用来区分日志系统中不同项目的日志
      * 用来创建es索引，不能出现大写字母
      */
-    private static $projectName = 'user_center';
+    private $projectName = 'user_center';
 
     /**
      * elk redis 配置
      * 日志传送的redis数据库
      */
-    private static $elkRedisConfig = array(
+    private $elkRedisConfig = array(
         'host'   => '192.168.107.107',
         'port'   => 6379,
         // 配置选择的第几个redis库, 不能修改
@@ -76,7 +76,7 @@ class Logger
      * elk redis 配置
      * 日志传送的redis数据库
      */
-    private static $redisConfig = array(
+    private $redisConfig = array(
         'host'   => '192.168.107.107',
         'port'   => 6379,
         'select' => 0,
@@ -85,12 +85,12 @@ class Logger
     /**
      * 日志系统是否使用redis队列服务
      */
-    private static $useElkRedis = true;
+    private $useElkRedis = true;
 
     /**
      * 发送邮件配置 目前支持阿里云邮箱
      */
-    private static $emailConfig = array(
+    private $emailConfig = array(
         'host'           => 'smtp.aliyun.com',            // smtp服务器
         'username'       => 'fengxinyhyl@aliyun.com',     // 发送邮件的地址(为防止拒收，把该地址加入白名单)
         'password'       => 'mLVcNrWUkjjSn35',            // 发送邮件的密码
@@ -116,7 +116,7 @@ class Logger
      * 每小时报警次数是alertCondition的整数倍会发送报警短信
      * 每小时至多发送5条
      */
-    private static $smsConfig = array(
+    private $smsConfig = array(
         'phone'          => array(),
         'alertCondition' => 10,
     );
@@ -124,13 +124,30 @@ class Logger
     /**
      * 日志文件目录
      */
-    private static $logDir = '/tmp';
+    private $logDir = '/tmp';
 
     /************************************** user config end ***************************************************/
 
     private $elkRedis = null;
     private $redis = null;
 
+    // 是否初始化
+    private $init = false;
+
+    /**
+     * @var Common
+     */
+    private $commonSDK = null;
+
+    /**
+     * @var Email
+     */
+    private $emailSDK = null;
+
+    /**
+     * @var Sms
+     */
+    private $smsSDK = null;
     /**
      * 日志分类
      * 支持日志分类扩展，需要初始化方法中实现新的日志类型，并实现该类型的调用
@@ -152,21 +169,29 @@ class Logger
     // 日志对象
     private $logs = array();
 
+    /**
+     * 单例模式
+     */
+    private function __construct()
+    {
+    }
+
+    public function __clone()
+    {
+    }
+
 
     /**
-     * notes: 获取日志单例对象
-     * @param array $config
-     * @return null
-     * @throws LoggerException
+     * notes:  获取日志单例对象
+     * @return Logger
      * @create: 2018/12/27 08:56
      * @update: 2019/7/9 18:07
      * @author: zhangkaixiang
      * @editor:
      */
-    public static function getLogger(array $config = array())
+    public static function getLogger()
     {
         if (!self::$instance) {
-            self::configLogger($config);
             self::$instance = new self();
         }
         return self::$instance;
@@ -182,14 +207,14 @@ class Logger
      * @author: zhangkaixiang
      * @editor:
      */
-    private static function configLogger(array $config)
+    public function initLogger(array $config)
     {
         if (empty($config) or !is_array($config)) {
             throw new LoggerException('请传入配置参数');
         }
         // 1.项目名称
         if (isset($config['projectName']) and is_string($config['projectName'])) {
-            self::$projectName = strtolower($config['projectName']);
+            $this->projectName = strtolower($config['projectName']);
         } else {
             throw new LoggerException('配置信息，projectName不合法');
         }
@@ -198,36 +223,36 @@ class Logger
         if (isset($config['elkRedisConfig']) and is_array($config['elkRedisConfig'])) {
             $elkRedis = $config['elkRedisConfig'];
             if (isset($elkRedis['host'])) {
-                self::$elkRedisConfig['host'] = $elkRedis['host'];
+                $this->elkRedisConfig['host'] = $elkRedis['host'];
             }
             if (isset($elkRedis['port'])) {
-                self::$elkRedisConfig['port'] = $elkRedis['port'];
+                $this->elkRedisConfig['port'] = $elkRedis['port'];
             }
             if (isset($elkRedis['select'])) {
-                self::$elkRedisConfig['select'] = $elkRedis['select'];
+                $this->elkRedisConfig['select'] = $elkRedis['select'];
             }
             if (isset($elkRedis['key'])) {
-                self::$elkRedisConfig['key'] = $elkRedis['key'];
+                $this->elkRedisConfig['key'] = $elkRedis['key'];
             }
         }
         // 是否使用elk redis 做为日志传输通道
         if (isset($config['useElkRedis'])) {
-            self::$useElkRedis = $config['useElkRedis'];
+            $this->useElkRedis = $config['useElkRedis'];
         }
 
         // 3.项目redis缓存配置
         if (isset($config['redisConfig']) and is_array($config['redisConfig'])) {
             $redis = $config['redisConfig'];
             if (isset($redis['host'])) {
-                self::$redisConfig['host'] = $redis['host'];
+                $this->redisConfig['host'] = $redis['host'];
             } else {
                 throw new LoggerException('配置信息，redisConfig的host没有配置');
             }
             if (isset($redis['port'])) {
-                self::$redisConfig['port'] = $redis['port'];
+                $this->redisConfig['port'] = $redis['port'];
             }
             if (isset($redis['select'])) {
-                self::$redisConfig['select'] = $redis['select'];
+                $this->redisConfig['select'] = $redis['select'];
             }
         }
 
@@ -236,19 +261,19 @@ class Logger
             $email = $config['emailConfig'];
             // 提醒报警邮件
             if (isset($email['sendTo']) and is_array($email['sendTo'])) {
-                self::$emailConfig['sendTo'] = $email['sendTo'];
+                $this->emailConfig['sendTo'] = $email['sendTo'];
             }
             // 系统不可用时的报警邮件
             if (isset($email['systemAlert']) and is_array($email['systemAlert'])) {
-                self::$emailConfig['systemAlert'] = $email['systemAlert'];
+                $this->emailConfig['systemAlert'] = $email['systemAlert'];
             }
             // 是否开启普通的提醒
             if (isset($email['normalRemind'])) {
-                self::$emailConfig['normalRemind'] = $email['normalRemind'];
+                $this->emailConfig['normalRemind'] = $email['normalRemind'];
             }
             // 普通提醒的时间间隔
             if (isset($email['normalInterval'])) {
-                self::$emailConfig['normalInterval'] = $email['normalInterval'];
+                $this->emailConfig['normalInterval'] = $email['normalInterval'];
             }
         }
 
@@ -256,12 +281,12 @@ class Logger
         if (isset($config['smsConfig']) and is_array($config['smsConfig'])) {
             $sms = $config['smsConfig'];
             if (isset($sms['phone']) and is_array($sms['phone']) and $sms['phone']) {
-                self::$smsConfig['phone'] = $sms['phone'];
+                $this->smsConfig['phone'] = $sms['phone'];
             } else {
                 throw new LoggerException('配置信息，短信报警手机号不合法');
             }
             if (isset($sms['alertCondition']) and is_numeric($sms['alertCondition'])) {
-                self::$smsConfig['alertCondition'] = $sms['alertCondition'];
+                $this->smsConfig['alertCondition'] = $sms['alertCondition'];
             }
         } else {
             throw new LoggerException('配置信息，短信报警配置为空');
@@ -272,8 +297,10 @@ class Logger
             if (!is_dir($config['logDir'])) {
                 throw new LoggerException('日志目录不存在');
             }
-            self::$logDir = $config['logDir'];
+            $this->logDir = $config['logDir'];
         }
+
+        $this->init = true;
     }
 
 
@@ -366,35 +393,58 @@ class Logger
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->error($msg, array('context' => $content));
-//        $this->emailRemind('error', $content);
+        $redis = $this->getRedis();
+        if ($redis) {
+            if($this->emailConfig['normalRemind']){
+                $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
+                    $this->emailConfig['normalInterval'], 'error', $content,
+                    $this->getCommonSDK()->getRequestId());
+            }
+
+        }
     }
 
     public function critical($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->critical($msg, array('context' => $content));
-//        $this->emailRemind('critical', $content);
+        $redis = $this->getRedis();
+        if ($redis and $this->emailConfig['normalRemind']) {
+            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
+                $this->emailConfig['normalInterval'], 'critical', $content,
+                $this->getCommonSDK()->getRequestId());
+        }
     }
 
     public function alert($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->alert($msg, array('context' => $content));
-//        $this->emailRemind('alert', $content);
+        $redis = $this->getRedis();
+        if ($redis and $this->emailConfig['normalRemind']) {
+            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
+                $this->emailConfig['normalInterval'], 'alert', $content,
+                $this->getCommonSDK()->getRequestId());
+        }
     }
 
     public function emergency($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->emergency($msg, array('context' => $content));
-//        $this->emailRemind('emergency', $content);
+        $redis = $this->getRedis();
+        if ($redis and $this->emailConfig['normalRemind']) {
+            $this->getEmailSDK()->emailRemind($redis, $this->emailConfig['sendTo'],
+                $this->emailConfig['normalInterval'], 'emergency', $content,
+                $this->getCommonSDK()->getRequestId());
+        }
     }
 
     /**
      * 获取日志对象实例
      * @return mixed
      */
-    public function getUseAge()
+    private function getUseAge()
     {
         if (empty($this->logs)) {
             // todo 初始化日志失败处理
@@ -415,8 +465,12 @@ class Logger
      */
     private function initLogs()
     {
+        if (empty($this->init)) {
+            throw new LoggerException('日志系统没有配置参数');
+        }
+
         // 日志格式化
-        $formatter = new LogstashFormatter(self::$projectName, '127.0.0.1', '', '', 1);
+        $formatter = new LogstashFormatter($this->projectName, '127.0.0.1', '', '', 1);
 
         /**
          * redis日志处理器
@@ -425,19 +479,19 @@ class Logger
         if (empty($redis)) {
             $redisHandler = false;
         } else {
-            $redisHandler = new RedisHandler($redis, self::$elkRedisConfig['key']);
+            $redisHandler = new RedisHandler($redis, $this->elkRedisConfig['key']);
         }
 
         /**
          * 本地文件处理器
          */
-        $logPath       = $this->getLogPath();
+        $logPath       = $this->getCommonSDK()->getLogPath($this->logDir);
         $streamHandler = new StreamHandler($logPath, Monolog::DEBUG);
 
         /**
          * tmp日志处理，用来日志抓取脚本同步到日志服务器
          */
-        $tmpLog = self::$logDir.'/tmp.log';
+        $tmpLog = $this->logDir . '/tmp.log';
         if (!file_exists($logPath)) {
             // 如果文件不存在，则说明已经已经超过一个小时，清理tmp日志
             if (file_exists($tmpLog)) {
@@ -459,12 +513,12 @@ class Logger
         );
 
         // 获取本次请求的唯一id,并添加到所有的日志句柄中
-        $requestId = $this->requestId = $this->getRequestId();
+        $requestId = $this->requestId = $this->getCommonSDK()->getRequestId();
         foreach ($this->logs as $log) {
             $log->pushProcessor(function ($record) use ($requestId) {
                 $record['extra']['requestId']   = $requestId;
                 $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ?: '127.0.0.1';
-                $record['extra']['projectName'] = self::$projectName;
+                $record['extra']['projectName'] = $this->projectName;
                 return $record;
             });
         }
@@ -485,7 +539,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_COMMON);
 
-        if (self::$useElkRedis and $redisHandler) {
+        if ($this->useElkRedis and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -517,7 +571,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_PUSH);
 
-        if (self::$useElkRedis and $redisHandler) {
+        if ($this->useElkRedis and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -549,7 +603,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_Job);
 
-        if (self::$useElkRedis and $redisHandler) {
+        if ($this->useElkRedis and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -582,7 +636,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_SYSTEM);
 
-        if (self::$useElkRedis and $redisHandler) {
+        if ($this->useElkRedis and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -609,25 +663,6 @@ class Logger
 
 
     /**
-     * 获取本次请求的唯一id
-     * 通过关联当前的唯一id，查找本次请求的所有日志
-     * @param int $length
-     * @return string
-     * @author zhangkaixiang
-     */
-    private function getRequestId($length = 10)
-    {
-        $string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-        $retStr = '';
-        $strLen = strlen($string);
-        for ($i = 0; $i < $length; $i++) {
-            $retStr .= $string{mt_rand(0, $strLen - 1)};
-        }
-        return date('YmdHis') . $retStr;
-    }
-
-
-    /**
      * notes: 获取elkRedis
      * @return bool|null|\Redis
      * @create: 2019/7/10 11:31
@@ -640,48 +675,93 @@ class Logger
         if (isset($this->elkRedis)) {
             return $this->elkRedis;
         }
-        $common = new Common();
-        $redis  = $common->getRedisHandler(self::$elkRedisConfig);
-        if (empty($redis)) {
-            // 发送系统邮件
+        $elkRedis = $this->getCommonSDK()->getRedisHandler($this->elkRedisConfig);
+        if (empty($elkRedis)) {
+            // 发送系统报警邮件
+            $redis = $this->getRedis();
+            if ($redis) {
+                $this->getEmailSDK()->sendSystemAlertEmail($redis, $this->emailConfig['systemAlert'],
+                    $this->emailConfig['normalInterval'], $this->elkRedisConfig['host']);
+            }
         }
-        $this->elkRedis = $redis;
+        $this->elkRedis = $elkRedis;
         return $this->elkRedis;
     }
 
 
     /**
-     * 获取本地的日志位置，每小时一个文件
-     * path: /yourLogDir/201902/25/09.log
-     * @return bool|string
-     * @author zhangkaixiang
+     * notes:  获取redis
+     * @return bool|null|\Redis
+     * @create: 2019/7/10 15:26
+     * @update: 2019/7/10 15:26
+     * @author: zhangkaixiang
+     * @editor:
      */
-    private function getLogPath()
+    private function getRedis()
     {
-        $logDir        = self::$logDir;
-        $tmpLog        = $logDir . '/tmp.log';
-        $date          = date('Ym/d');
-        $hour          = date('H');
-        $currentLogDir = $logDir . '/' . $date;
-        var_dump($currentLogDir);
-        if (!is_dir($currentLogDir)) {
-            $mkRet = mkdir($currentLogDir, 0755, true);
-            $this->info($mkRet);
-            if(empty($mkRet)){
-                return $tmpLog;
-            }
-
-            // 删除三个月之前的日志
-            $beforeThreeMonth = date('Ym/d', strtotime('-3 months'));
-            $deleteDir = $logDir . '/' . $beforeThreeMonth;
-            @(new Common())->delDir($deleteDir);
-
-            if ($mkRet) {
-                return $currentLogDir . '/' . $hour . '.log';
-            }
-            return $logDir.'/tmp.log';
-        } else {
-            return $currentLogDir . '/' . $hour . '.log';
+        if (isset($this->redis)) {
+            return $this->redis;
         }
+        $redis = $this->getCommonSDK()->getRedisHandler($this->redisConfig);
+
+        $this->redis = $redis;
+        return $this->redis;
+    }
+
+
+    /**
+     * notes:  获取common对象
+     * @return Common
+     * @create: 2019/7/10 15:35
+     * @update: 2019/7/10 15:35
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    private function getCommonSDK()
+    {
+        if (isset($this->commonSDK)) {
+            return $this->commonSDK;
+        }
+
+        $this->commonSDK = new Common();
+        return $this->commonSDK;
+    }
+
+
+    /**
+     * notes:  获取email对象
+     * @return Email
+     * @create: 2019/7/10 15:36
+     * @update: 2019/7/10 15:36
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    private function getEmailSDK()
+    {
+        if (isset($this->emailSDK)) {
+            return $this->emailSDK;
+        }
+
+        $this->emailSDK = new Email($this->projectName, $this->emailConfig['username'],
+            $this->emailConfig['password'], $this->emailConfig['host']);
+        return $this->emailSDK;
+    }
+
+
+    /**
+     * notes:
+     * @return Sms
+     * @create: 2019/7/10 16:15
+     * @update: 2019/7/10 16:15
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    private function getSmsSDK(){
+        if (isset($this->smsSDK)) {
+            return $this->smsSDK;
+        }
+
+        $this->smsSDK = new Sms();
+        return $this->smsSDK;
     }
 }

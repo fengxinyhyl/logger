@@ -16,6 +16,8 @@ namespace Logger;
  */
 class Common
 {
+    private $requestId = null;
+    const REQUEST_ID_LEN = 10;
 
     /**
      * notes: 返回redis句柄
@@ -38,6 +40,67 @@ class Common
 
         $redis->select($redisConfig['select']);
         return $redis;
+    }
+
+
+    /**
+     * 获取本次请求的唯一id
+     * 通过关联当前的唯一id，查找本次请求的所有日志
+     * @return string
+     * @author zhangkaixiang
+     */
+    public function getRequestId()
+    {
+        if($this->requestId){
+            return $this->requestId;
+        }
+        // @todo 从header取传递过来的requestId
+//        if(isset($_SERVER['HTTP_REQUESTID']) and strlen($_SERVER['HTTP_REQUESTID']) == self::REQUEST_ID_LEN+14){
+//            $this->requestId = $_SERVER['HTTP_REQUESTID'];
+//        }
+        $string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        $retStr = '';
+        $strLen = strlen($string);
+        for ($i = 0; $i < self::REQUEST_ID_LEN; $i++) {
+            $retStr .= $string{mt_rand(0, $strLen - 1)};
+        }
+        $this->requestId = date('YmdHis') . $retStr;
+        return $this->requestId;
+    }
+
+
+    /**
+     * 获取本地的日志位置，每小时一个文件
+     * path: /yourLogDir/201902/25/09.log
+     * @param $logDir
+     * @return bool|string
+     * @author zhangkaixiang
+     */
+    public function getLogPath($logDir)
+    {
+        $tmpLog        = $logDir . '/tmp.log';
+        $date          = date('Ym/d');
+        $hour          = date('H');
+        $currentLogDir = $logDir . '/' . $date;
+        var_dump($currentLogDir);
+        if (!is_dir($currentLogDir)) {
+            $mkRet = mkdir($currentLogDir, 0755, true);
+            if(empty($mkRet)){
+                return $tmpLog;
+            }
+
+            // 删除三个月之前的日志
+            $beforeThreeMonth = date('Ym/d', strtotime('-3 months'));
+            $deleteDir = $logDir . '/' . $beforeThreeMonth;
+            @$this->delDir($deleteDir);
+
+            if ($mkRet) {
+                return $currentLogDir . '/' . $hour . '.log';
+            }
+            return $logDir.'/tmp.log';
+        } else {
+            return $currentLogDir . '/' . $hour . '.log';
+        }
     }
 
 
