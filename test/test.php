@@ -9,9 +9,10 @@
 require_once '../vendor/autoload.php';
 
 $config = require('config.php');
-var_dump($config);
 try{
     $logger = \Logger\Logger::getLogger($config);
+    \Logger\Logger::getLogger()->info('bbbb');
+    $logger->info('aaaaa');
 }catch (\Logger\LoggerException $e){
     var_dump($e->getMessage());
 }

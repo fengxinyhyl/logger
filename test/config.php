@@ -57,4 +57,9 @@ return array(
         ),
         'alertCondition' => 10,
     ),
+
+    /**
+     * 日志文件目录,使用绝对路径
+     */
+    'logDir' => '/data',
 );
