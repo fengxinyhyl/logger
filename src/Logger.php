@@ -73,7 +73,7 @@ class Logger
     );
 
     /**
-     * elk redis 配置
+     * redis缓存配置
      * 日志传送的redis数据库
      */
     private $redisConfig = array(
@@ -301,6 +301,23 @@ class Logger
         }
 
         $this->init = true;
+        $this->buildParams();
+    }
+
+
+    /**
+     * notes:   在系统日志中添加请求参数
+     * @create: 2019/7/12 9:18
+     * @update: 2019/7/12 9:18
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    private function buildParams(){
+        $params = $_REQUEST;
+        $this->system()->getUseAge()->pushProcessor(function ($record) use ($params) {
+            $record['extra']['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
+            return $record;
+        });
     }
 
 
@@ -450,11 +467,18 @@ class Logger
             // todo 初始化日志失败处理
             $this->initLogs();
         }
-        if ($this->module) {
-            return $this->logs[$this->module];
-        } else {
-            return $this->logs[self::MODULE_COMMON];
+
+        // 获取当前选中的日志类型
+        if($this->module){
+            $module = $this->module;
+        }else{
+            $module = self::MODULE_COMMON;
         }
+
+        // 恢复日志类型变量
+        $this->module = null;
+
+        return $this->logs[$module];
     }
 
 

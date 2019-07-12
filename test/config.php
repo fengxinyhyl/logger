@@ -14,7 +14,7 @@ return array(
     'projectName' => 'user_center',
 
     /**
-     * elk redis 配置
+     * redis缓存配置
      * 日志传送的redis数据库
      */
     'redisConfig' => array(
@@ -32,7 +32,7 @@ return array(
      * 发送邮件配置 目前支持阿里云邮箱
      */
     'emailConfig' => array(
-        // 接收邮件的地址
+        // 接收邮件的地址,需要在白名单中加入fengxinyhyl@aliyun.com,防止无法收到邮件
         'sendTo'   => array(
             'fengxinyhyl@qq.com',
         ),
@@ -40,7 +40,7 @@ return array(
         'systemAlert'   => array(
             'fengxinyhyl@qq.com',
         ),
-        // 是否开启常规提醒，开启后出现error,critical类型错误会发送提醒邮件
+        // 是否开启常规提醒，开启后出现error,critical等类型错误会发送提醒邮件
         'normalRemind'  => true,
         // 常规提醒的时间间隔(秒)
         'normalInterval' => 86400,
@@ -52,15 +52,16 @@ return array(
      * 每小时至多发送5条
      */
     'smsConfig' => array(
+        // 报警短信接收号码必须配置
         'phones' => array(
             18362705640
         ),
         // 发送条件必须为正整数，默认为10
-        'alertCondition' => 3,
+        'alertCondition' => 10,
     ),
 
     /**
      * 日志文件目录,使用绝对路径
      */
-    'logDir' => '/data',
+    'logDir' => '/tmp',
 );
