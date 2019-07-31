@@ -85,21 +85,19 @@ class Logger
     /**
      * 日志系统是否使用redis队列服务
      */
-    private $useElkRedis = true;
+    private $useElkService = true;
 
     /**
      * 发送邮件配置 目前支持阿里云邮箱
      */
     private $emailConfig = array(
-        'host'           => 'smtp.aliyun.com',            // smtp服务器
-        'username'       => 'fengxinyhyl@aliyun.com',     // 发送邮件的地址(为防止拒收，把该地址加入白名单)
-        'password'       => 'mLVcNrWUkjjSn35',            // 发送邮件的密码
+        'host'           => 'smtp.exmail.qq.com',            // smtp服务器
+        'username'       => 'zhangkaixiang@house365.com',    // 发送邮件的地址(为防止拒收，把该地址加入白名单)
+        'password'       => 'xxxxxxxx',                      // 发送邮件的密码
 
         // 接收邮件的地址
         'sendTo'         => array(
             'fengxinyhyl@qq.com',
-            "602823863@qq.com",
-            '969491970@qq.com'
         ),
         // 缓存系统异常报警邮箱
         'systemAlert'    => array(
@@ -236,8 +234,8 @@ class Logger
             }
         }
         // 是否使用elk redis 做为日志传输通道
-        if (isset($config['useElkRedis'])) {
-            $this->useElkRedis = $config['useElkRedis'];
+        if (isset($config['useElkService'])) {
+            $this->useElkService = $config['useElkService'];
         }
 
         // 3.项目redis缓存配置
@@ -259,6 +257,17 @@ class Logger
         // 4.邮件提醒
         if (isset($config['emailConfig']) and is_array($config['emailConfig'])) {
             $email = $config['emailConfig'];
+            // 邮件服务器配置
+            if(isset($email['host']) and !empty($email['host'])){
+                $this->emailConfig['host'] = $email['host'];
+            }
+            if(isset($email['username']) and !empty($email['username'])){
+                $this->emailConfig['username'] = $email['username'];
+            }
+            if(isset($email['password']) and !empty($email['password'])){
+                $this->emailConfig['password'] = $email['password'];
+            }
+
             // 提醒报警邮件
             if (isset($email['sendTo']) and is_array($email['sendTo'])) {
                 $this->emailConfig['sendTo'] = $email['sendTo'];
@@ -563,7 +572,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_COMMON);
 
-        if ($this->useElkRedis and $redisHandler) {
+        if ($this->useElkService and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -595,7 +604,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_PUSH);
 
-        if ($this->useElkRedis and $redisHandler) {
+        if ($this->useElkService and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -627,7 +636,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_Job);
 
-        if ($this->useElkRedis and $redisHandler) {
+        if ($this->useElkService and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }
@@ -660,7 +669,7 @@ class Logger
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_SYSTEM);
 
-        if ($this->useElkRedis and $redisHandler) {
+        if ($this->useElkService and $redisHandler) {
             $redisHandler->setFormatter($formatter);
             $logger->pushHandler($redisHandler);
         }

@@ -24,15 +24,18 @@ return array(
     ),
 
     /**
-     * 日志系统是否使用redis队列服务
+     * 日志系统是否使用队列服务
      */
-    'useElkRedis' => true,
+    'useElkService' => true,
 
     /**
-     * 发送邮件配置 目前支持阿里云邮箱
+     * 发送邮件配置
      */
     'emailConfig' => array(
-        // 接收邮件的地址,需要在白名单中加入fengxinyhyl@aliyun.com,防止无法收到邮件
+        'host'           => 'smtp.exmail.qq.com',            // smtp服务器
+        'username'       => 'zhangkaixiang@house365.com',    // 发送邮件的地址(为防止拒收，建议把该地址加入白名单)
+        'password'       => 'xxxxxxxxxxxxxxx',               // 发送邮件的密码
+
         'sendTo'   => array(
             'fengxinyhyl@qq.com',
         ),

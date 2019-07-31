@@ -36,7 +36,7 @@
         /**
          * 日志系统是否开启redis队列服务发送日志
          */
-        'useElkRedis' => true,
+        'useElkService' => true,
     
         /**
          * 发送邮件配置 目前支持阿里云邮箱
