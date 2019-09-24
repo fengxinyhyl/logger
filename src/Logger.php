@@ -683,7 +683,7 @@ class Logger
         // 添加当前请求的相关信息
         $logger->pushProcessor(new WebProcessor(null, array(
             'url'         => 'REQUEST_URI',
-            'real_ip'     => 'HTTP_X_REAL_IP',
+            'real_ip'     => 'HTTP_X_FORWARDED_FOR',    // 获取真实的ip地址，转发地址以逗号分隔
             'http_method' => 'REQUEST_METHOD',
             'server'      => 'SERVER_NAME',
             'referrer'    => 'HTTP_REFERER',
