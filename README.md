@@ -95,7 +95,7 @@
     Logger::getLogger()->system()->error('bbbb');
  
 ### 扩展
-#### 1.buildResponse，添加参数
+#### 1.BuildParams，添加参数
     // 应用开始
     'app_begin'    => [
         'your_path\BuildParams',

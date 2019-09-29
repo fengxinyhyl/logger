@@ -315,6 +315,19 @@ class Logger
 
 
     /**
+     * notes:  获取当前对象是否初始化
+     * @return bool
+     * @create: 2019/9/29 17:47
+     * @update: 2019/9/29 17:47
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    public function getInit(){
+        return $this->init;
+    }
+
+
+    /**
      * notes:   在系统日志中添加请求参数
      * @create: 2019/7/12 9:18
      * @update: 2019/7/12 9:18
