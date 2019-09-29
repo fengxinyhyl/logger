@@ -58,7 +58,7 @@
             ),
             // 是否开启常规提醒，开启后出现error,critical等类型错误会发送提醒邮件
             'normalRemind'  => true,
-            // 常规提醒的时间间隔(秒)
+            // 常规提醒的时间间隔(秒) 因发送邮件时间较长，时间间隔需要设置大一些
             'normalInterval' => 86400,
         ),
     
@@ -95,10 +95,30 @@
     Logger::getLogger()->system()->error('bbbb');
  
 ### 扩展
-#### 1.buildResponse，添加返回的数据
+#### 1.buildResponse，添加参数
+    // 应用开始
+    'app_begin'    => [
+        'your_path\BuildParams',
+    ],
+
+    class BuildParams
+    {
+        /**
+         * 将参数添加到日志中
+         */
+        public function run() {
+            $params = Request::instance()->param();
+            Logger::getLogger()->system()->getUseAge()->pushProcessor(function ($record) use ($params) {
+                $record['extra']['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
+                return $record;
+            });
+        }
+    
+    }
+#### 2.buildResponse，添加返回的数据
     // 应用结束（TP项目）
     'app_end'      => [
-        'app\common\behavior\BuildResponse',
+        'your_path\BuildResponse',
     ],
 
     /**
@@ -112,7 +132,7 @@
         $response = is_array($response) ? json_encode($response, JSON_UNESCAPED_UNICODE) : $response;
         // 本次访问运行的时间
         $runTime = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
-        if($runTime > 1)){ // 时间可根据项目自行配置
+        if($runTime > 1){ // 时间可根据项目自行配置
             Logger::getLogger()->common()->warn('本次运行时间过长', array('runTime' => $runTime.' s'));
         }
         Logger::getLogger()->system()->getUseAge()->pushProcessor(function ($record) use ($response, $runTime) {
@@ -122,7 +142,9 @@
         });
         Logger::getLogger()->system()->info('success');
     }
-#### 2.CacheException，捕获系统异常，报警依赖此项
+
+
+#### 3.CacheException，捕获系统异常，报警依赖此项
 [ThinkPHP 异常处理](#https://www.kancloud.cn/manual/thinkphp5/126075)
 
 [Laravel 错误处理](https://laravelacademy.org/post/9548.html)

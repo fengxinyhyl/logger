@@ -470,7 +470,7 @@ class Logger
      * 获取日志对象实例
      * @return mixed
      */
-    private function getUseAge()
+    public function getUseAge()
     {
         if (empty($this->logs)) {
             // todo 初始化日志失败处理
