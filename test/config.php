@@ -14,8 +14,15 @@ return array(
     'projectName' => 'user_center',
 
     /**
+     * elk redis配置
+     */
+    'elkRedisConfig' => array(
+        'host' => '192.168.107.107',
+        'port' => 6379,
+    ),
+
+    /**
      * redis缓存配置
-     * 日志传送的redis数据库
      */
     'redisConfig' => array(
         'host' => '192.168.107.107',
@@ -64,7 +71,7 @@ return array(
     ),
 
     /**
-     * 日志文件目录,使用绝对路径
+     * 日志文件目录,建议使用绝对路径
      */
     'logDir' => '/tmp',
 );

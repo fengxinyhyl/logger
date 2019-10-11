@@ -304,7 +304,11 @@ class Logger
         // 6.日志文件目录
         if (isset($config['logDir'])) {
             if (!is_dir($config['logDir'])) {
-                throw new LoggerException('日志目录不存在');
+                try{
+                    mkdir($config['logDir'], 0777, true);
+                }catch (\Exception $e){
+                    throw new LoggerException('logger创建目录'.$config['logDir'].'失败, 请确认是否有权限');
+                }
             }
             $this->logDir = $config['logDir'];
         }
@@ -454,7 +458,6 @@ class Logger
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
         $this->getUseAge()->emergency($msg, array('context' => $content));
         $this->errorHandel('emergency', $msg . $content);
-
     }
 
     /**
@@ -563,7 +566,7 @@ class Logger
         foreach ($this->logs as $log) {
             $log->pushProcessor(function ($record) use ($requestId) {
                 $record['extra']['requestId']   = $requestId;
-                $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ?: '127.0.0.1';
+                $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
                 $record['extra']['projectName'] = $this->projectName;
                 return $record;
             });
