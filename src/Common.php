@@ -84,7 +84,7 @@ class Common
         $currentLogDir = $logDir . '/' . $date;
 
         if (!is_dir($currentLogDir)) {
-            $mkRet = mkdir($currentLogDir, 0755, true);
+            $mkRet = @mkdir($currentLogDir, 0755, true);
             if (empty($mkRet)) {
                 return $tmpLog;
             }
