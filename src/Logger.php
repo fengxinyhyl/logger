@@ -123,6 +123,8 @@ class Logger
      * 日志文件目录
      */
     private $logDir = '/tmp';
+    // 日志保留天数，最长设置30天
+    private $reservedDays = 10;
 
     /************************************** user config end ***************************************************/
 
@@ -311,6 +313,14 @@ class Logger
                 }
             }
             $this->logDir = $config['logDir'];
+        }
+
+        // 7.日志保留天数
+        if (isset($config['reservedDays']) and $config['reservedDays'] > 0) {
+            if($config['reservedDays'] > 30){
+                $config['reservedDays'] = 30;
+            }
+            $this->reservedDays = $config['reservedDays'];
         }
 
         $this->init = true;
@@ -771,8 +781,8 @@ class Logger
         if (isset($this->commonSDK)) {
             return $this->commonSDK;
         }
-
-        $this->commonSDK = new Common();
+        
+        $this->commonSDK = new Common($this->reservedDays);
         return $this->commonSDK;
     }
 

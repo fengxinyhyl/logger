@@ -11,7 +11,7 @@ return array(
      * 用来区分日志系统中不同项目的日志
      * 用来创建es索引，不能出现大写字母
      */
-    'projectName' => 'user_center',
+    'projectName' => 'test',
 
     /**
      * elk redis配置
@@ -73,5 +73,7 @@ return array(
     /**
      * 日志文件目录,建议使用绝对路径
      */
-    'logDir' => '/tmp',
+    'logDir' => '/tmp/test',
+    /* 日志保留天数，最长设置30天 */
+    'reservedDays' => 10,
 );

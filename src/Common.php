@@ -16,8 +16,14 @@ namespace Logger;
  */
 class Common
 {
-    private $requestId = null;
     const REQUEST_ID_LEN = 10;
+    private $requestId = null;
+    private $reservedDays = 10;
+
+    public function __construct($reservedDays = 10)
+    {
+        $this->reservedDays = $reservedDays;
+    }
 
     /**
      * notes: 返回redis句柄
@@ -89,9 +95,9 @@ class Common
                 return $tmpLog;
             }
 
-            // 删除三个月之前的日志
-            $beforeThreeMonth = date('Ym/d', strtotime('-3 months'));
-            $deleteDir        = $logDir . '/' . $beforeThreeMonth;
+            // 删除不再保留的日志
+            $oldDir    = date('Ym/d', strtotime('-' . $this->reservedDays . ' days'));
+            $deleteDir = $logDir . '/' . $oldDir;
             @$this->delDir($deleteDir);
 
             if ($mkRet) {
