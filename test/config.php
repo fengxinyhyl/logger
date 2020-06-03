@@ -75,5 +75,5 @@ return array(
      */
     'logDir' => '/tmp/test',
     /* 日志保留天数，最长设置30天 */
-    'reservedDays' => 10,
+    'reservedDays' => 2,
 );

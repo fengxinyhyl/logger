@@ -13,10 +13,11 @@ require_once '../vendor/autoload.php';
 $config = require('config.php');
 try{
     Logger::getLogger()->initLogger($config);
-    Logger::getLogger()->common()->info('bbbb');
-    Logger::getLogger()->system()->warn('aaaa');
-    Logger::getLogger()->error('ccc');
-    Logger::getLogger()->critical('ddd');
+    $data = array('url' => '//', 'username' => 'abcd');
+    Logger::getLogger()->common()->info('bbbb'.json_encode($data));
+    Logger::getLogger()->system()->warn('aaaa', $data);
+//    Logger::getLogger()->error('ccc');
+//    Logger::getLogger()->critical('ddd');
 }catch (\Logger\LoggerException $e){
     var_dump($e->getMessage());
 }

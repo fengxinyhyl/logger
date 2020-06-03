@@ -124,7 +124,7 @@ class Logger
      */
     private $logDir = '/tmp';
     // 日志保留天数，最长设置30天
-    private $reservedDays = 10;
+    private $reservedDays = 7;
 
     /************************************** user config end ***************************************************/
 
@@ -417,7 +417,11 @@ class Logger
      */
     public function debug($msg, array $context = array())
     {
-        $this->getUseAge()->debug($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        try{
+            @$this->getUseAge()->debug($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        }catch (\Exception $e){
+
+        }
     }
 
     public function info($msg, array $context = array())
@@ -429,44 +433,72 @@ class Logger
                 $context['response'] = $response;
             }
         }
-        $this->getUseAge()->info($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        try{
+            @$this->getUseAge()->info($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        }catch (\Exception $e){
+
+        }
     }
 
     public function notice($msg, array $context = array())
     {
-        $this->getUseAge()->notice($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        try{
+            @$this->getUseAge()->notice($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        }catch (\Exception $e){
+
+        }
     }
 
     public function warn($msg, array $context = array())
     {
-        $this->getUseAge()->warn($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        try{
+            @$this->getUseAge()->warn($msg, array('context' => json_encode($context, JSON_UNESCAPED_UNICODE)));
+        }catch (\Exception $e){
+
+        }
     }
 
     public function error($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
-        $this->getUseAge()->error($msg, array('context' => $content));
+        try{
+            @$this->getUseAge()->error($msg, array('context' => $content));
+        }catch (\Exception $e){
+
+        }
         $this->errorHandel('error', $msg . $content);
     }
 
     public function critical($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
-        $this->getUseAge()->critical($msg, array('context' => $content));
+        try{
+            @$this->getUseAge()->critical($msg, array('context' => $content));
+        }catch (\Exception $e){
+
+        }
         $this->errorHandel('critical', $msg . $content);
     }
 
     public function alert($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
-        $this->getUseAge()->alert($msg, array('context' => $content));
+        try{
+            @$this->getUseAge()->alert($msg, array('context' => $content));
+        }catch (\Exception $e){
+
+        }
         $this->errorHandel('alert', $msg . $content);
     }
 
     public function emergency($msg, array $context = array())
     {
         $content = json_encode($context, JSON_UNESCAPED_UNICODE);
-        $this->getUseAge()->emergency($msg, array('context' => $content));
+        try{
+            @$this->getUseAge()->emergency($msg, array('context' => $content));
+        }catch (\Exception $e){
+
+        }
         $this->errorHandel('emergency', $msg . $content);
     }
 
@@ -557,12 +589,11 @@ class Logger
                 @unlink($tmpLog);
             }
         }
-        $tmpHandler = new StreamHandler($tmpLog, Monolog::DEBUG);
 
-        $commonLog = $this->getCommonLog($formatter, $redisHandler, $streamHandler, $tmpHandler);
-        $sysLog    = $this->getSysLog($formatter, $redisHandler, $streamHandler, $tmpHandler);
-        $pushLog   = $this->getPushLog($formatter, $redisHandler, $streamHandler, $tmpHandler);
-        $jobLog    = $this->getJobLog($formatter, $redisHandler, $streamHandler, $tmpHandler);
+        $commonLog = $this->getCommonLog($formatter, $redisHandler, $streamHandler);
+        $sysLog    = $this->getSysLog($formatter, $redisHandler, $streamHandler);
+        $pushLog   = $this->getPushLog($formatter, $redisHandler, $streamHandler);
+        $jobLog    = $this->getJobLog($formatter, $redisHandler, $streamHandler);
 
         $this->logs = array(
             self::MODULE_COMMON => $commonLog,
@@ -589,11 +620,10 @@ class Logger
      * @param $formatter
      * @param $redisHandler
      * @param StreamHandler $streamHandler
-     * @param StreamHandler $tmpHandler
      * @return Monolog
      */
     private function getCommonLog($formatter, $redisHandler,
-                                  StreamHandler $streamHandler, StreamHandler $tmpHandler)
+                                  StreamHandler $streamHandler)
     {
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_COMMON);
@@ -605,9 +635,6 @@ class Logger
 
         $streamHandler->setFormatter($formatter);
         $logger->pushHandler($streamHandler);
-
-        $tmpHandler->setFormatter($formatter);
-        $logger->pushHandler($tmpHandler);
 
         // 添加打印日志的位置
         $logger->pushProcessor(new IntrospectionProcessor(Monolog::DEBUG, array(), 1));
@@ -621,11 +648,10 @@ class Logger
      * @param $formatter
      * @param $redisHandler
      * @param StreamHandler $streamHandler
-     * @param StreamHandler $tmpHandler
      * @return Monolog
      */
     private function getPushLog($formatter, $redisHandler,
-                                StreamHandler $streamHandler, StreamHandler $tmpHandler)
+                                StreamHandler $streamHandler)
     {
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_PUSH);
@@ -637,9 +663,6 @@ class Logger
 
         $streamHandler->setFormatter($formatter);
         $logger->pushHandler($streamHandler);
-
-        $tmpHandler->setFormatter($formatter);
-        $logger->pushHandler($tmpHandler);
 
         // 添加打印日志的位置
         $logger->pushProcessor(new IntrospectionProcessor(Monolog::DEBUG, array(), 1));
@@ -653,11 +676,10 @@ class Logger
      * @param $formatter
      * @param $redisHandler
      * @param StreamHandler $streamHandler
-     * @param StreamHandler $tmpHandler
      * @return Monolog
      */
     private function getJobLog($formatter, $redisHandler,
-                               StreamHandler $streamHandler, StreamHandler $tmpHandler)
+                               StreamHandler $streamHandler)
     {
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_Job);
@@ -669,9 +691,6 @@ class Logger
 
         $streamHandler->setFormatter($formatter);
         $logger->pushHandler($streamHandler);
-
-        $tmpHandler->setFormatter($formatter);
-        $logger->pushHandler($tmpHandler);
 
         // 添加打印日志的位置
         $logger->pushProcessor(new IntrospectionProcessor(Monolog::DEBUG, array(), 1));
@@ -690,7 +709,7 @@ class Logger
      * @author zhangkaixiang
      */
     private function getSysLog($formatter, $redisHandler,
-                               StreamHandler $streamHandler, StreamHandler $tmpHandler)
+                               StreamHandler $streamHandler)
     {
         // 初始化日志对象
         $logger = new Monolog(self::MODULE_SYSTEM);
@@ -702,9 +721,6 @@ class Logger
 
         $streamHandler->setFormatter($formatter);
         $logger->pushHandler($streamHandler);
-
-        $tmpHandler->setFormatter($formatter);
-        $logger->pushHandler($tmpHandler);
 
         // 添加当前请求的相关信息
         $logger->pushProcessor(new WebProcessor(null, array(
