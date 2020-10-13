@@ -44,7 +44,11 @@ class Common
             return false;
         }
 
-        $redis->select($redisConfig['select']);
+        try{
+            $redis->select($redisConfig['select']);
+        }catch (\Exception $e){
+            return false;
+        }
         return $redis;
     }
 

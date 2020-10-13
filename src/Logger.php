@@ -797,7 +797,6 @@ class Logger
         if (isset($this->commonSDK)) {
             return $this->commonSDK;
         }
-        
         $this->commonSDK = new Common($this->reservedDays);
         return $this->commonSDK;
     }

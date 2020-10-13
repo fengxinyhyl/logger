@@ -55,7 +55,7 @@ class Email
             try {
                 $this->sendEmail('系统报警 ', $body, $emails);
             } catch (Exception $e) {
-                Logger::getLogger()->info('邮件发送失败: ' . $e->getMessage());
+//                Logger::getLogger()->info('邮件发送失败: ' . $e->getMessage());
             }
             $redis->set($cacheKey, '1', $interval);
         }
