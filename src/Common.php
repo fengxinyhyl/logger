@@ -72,7 +72,7 @@ class Common
         $retStr = '';
         $strLen = strlen($string);
         for ($i = 0; $i < self::REQUEST_ID_LEN; $i++) {
-            $retStr .= $string{mt_rand(0, $strLen - 1)};
+            $retStr .= $string[mt_rand(0, $strLen - 1)];
         }
         $this->requestId = date('YmdHis') . $retStr;
         return $this->requestId;
