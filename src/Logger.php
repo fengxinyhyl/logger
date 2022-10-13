@@ -573,22 +573,24 @@ class Logger
             $redisHandler = new RedisHandler($redis, $this->elkRedisConfig['key']);
         }
 
-        /**
-         * 本地文件处理器
-         */
-        $logPath       = $this->getCommonSDK()->getLogPath($this->logDir);
-        $streamHandler = new StreamHandler($logPath, Monolog::DEBUG);
+//        /**
+//         * 本地文件处理器
+//         */
+//        $logPath       = $this->getCommonSDK()->getLogPath($this->logDir);
+//        $streamHandler = new StreamHandler($logPath, Monolog::DEBUG);
+//
+//        /**
+//         * tmp日志处理，用来日志抓取脚本同步到日志服务器
+//         */
+//        $tmpLog = $this->logDir . '/tmp.log';
+//        if (!file_exists($logPath)) {
+//            // 如果文件不存在，则说明已经已经超过一个小时，清理tmp日志
+//            if (file_exists($tmpLog)) {
+//                @unlink($tmpLog);
+//            }
+//        }
 
-        /**
-         * tmp日志处理，用来日志抓取脚本同步到日志服务器
-         */
-        $tmpLog = $this->logDir . '/tmp.log';
-        if (!file_exists($logPath)) {
-            // 如果文件不存在，则说明已经已经超过一个小时，清理tmp日志
-            if (file_exists($tmpLog)) {
-                @unlink($tmpLog);
-            }
-        }
+        $streamHandler = new StreamHandler('php://stderr', Monolog::DEBUG);
 
         $commonLog = $this->getCommonLog($formatter, $redisHandler, $streamHandler);
         $sysLog    = $this->getSysLog($formatter, $redisHandler, $streamHandler);

@@ -53,7 +53,7 @@ class Sms
             }
             $hour = date('H');
             $msg  = date('Y-m-d H:i:s') . ", 项目：{$this->projectName} 从 {$hour} 点开始, 发生错误 {$errorCount} 次, 报警条件为 {$condition} 次, 需要立即处理！";
-            $url  = "http://mysms.house365.com:81/index.php/Interface/apiSendMobil/jid/145/depart/1/city/nj/mobileno/" . $phones . "/?msg=" . urlencode($msg);
+            $url  = "http://mysms.house365.com/index.php/Interface/apiSendMobil/jid/145/depart/1/city/nj/mobileno/" . $phones . "/?msg=" . urlencode($msg);
 
             $response  = $this->curl_get_contents($url);
             $sendCount += 1;
