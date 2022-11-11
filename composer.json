@@ -3,7 +3,7 @@
     "description": "一个通用的日志服务",
     "type": "l",
     "require": {
-        "monolog/monolog": "1.22.*",
+        "monolog/monolog": "1.23.0",
         "php": ">=5.4.0",
         "ext-redis": "*",
         "phpmailer/phpmailer": "~6.0"
