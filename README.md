@@ -7,8 +7,7 @@
 
 ### 项目依赖
     "require": {
-        "monolog/monolog": "1.22.*",
-        "phpmailer/phpmailer":"~6.0",
+        "monolog/monolog": "^2.0",
         "ext-redis": "*",
         "php": ">=5.4.0",
         },
@@ -33,34 +32,6 @@
             'select' => 0,
         ),
     
-        /**
-         * 日志系统是否开启redis队列服务发送日志
-         */
-        'useElkService' => true,
-    
-        /**
-         * 发送邮件配置 目前支持阿里云邮箱
-         */
-        'emailConfig' => array(
-            // smtp服务器
-            'host'           => 'smtp.exmail.qq.com',
-            // 发送邮件的地址(如果被拒收，建议把该地址加入白名单)            
-            'username'       => 'zhangkaixiang@house365.com',
-            // 发送邮件的密码    
-            'password'       => 'xxxxxxxxxxxxxxx',               
-            // 接收邮件的地址,需要在白名单中加入fengxinyhyl@aliyun.com,防止无法收到邮件
-            'sendTo'   => array(
-                'fengxinyhyl@qq.com',
-            ),
-            // 缓存系统异常报警邮箱
-            'systemAlert'   => array(
-                'fengxinyhyl@qq.com',
-            ),
-            // 是否开启常规提醒，开启后出现error,critical等类型错误会发送提醒邮件
-            'normalRemind'  => true,
-            // 常规提醒的时间间隔(秒) 因发送邮件时间较长，时间间隔需要设置大一些
-            'normalInterval' => 86400,
-        ),
     
         /**
          * 短信报警配置
@@ -161,7 +132,7 @@
         {
             //TODO::开发者对异常的操作
             //可以在此交由系统处理
-            Logger::getLogger()->system()->critical('file:'.$e->getFile().' line:'. $e->getLine().' msg:'.$e->getMessage());
+            Logger::getLogger()->critical('file:'.$e->getFile().' line:'. $e->getLine().' msg:'.$e->getMessage());
             return parent::render($e);
         }
     }

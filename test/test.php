@@ -14,10 +14,10 @@ $config = require('config.php');
 try{
     Logger::getLogger()->initLogger($config);
     $data = array('url' => '//', 'username' => 'abcd');
-    Logger::getLogger()->common()->info('bbbb'.json_encode($data));
-    Logger::getLogger()->system()->warn('aaaa', $data);
-//    Logger::getLogger()->error('ccc');
-//    Logger::getLogger()->critical('ddd');
+    Logger::getLogger()->info('bbbb'.json_encode($data));
+    Logger::getLogger()->warning('aaaa', $data);
+    Logger::getLogger()->error('ccc');
+    Logger::getLogger()->critical('ddd');
 }catch (\Logger\LoggerException $e){
     var_dump($e->getMessage());
 }

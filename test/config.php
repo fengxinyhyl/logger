@@ -14,46 +14,12 @@ return array(
     'projectName' => 'test',
 
     /**
-     * elk redis配置
-     */
-    'elkRedisConfig' => array(
-        'host' => '192.168.107.107',
-        'port' => 6379,
-    ),
-
-    /**
      * redis缓存配置
      */
     'redisConfig' => array(
         'host' => '192.168.107.107',
         'port' => 6379,
         'select' => 0,
-    ),
-
-    /**
-     * 日志系统是否使用队列服务
-     */
-    'useElkService' => true,
-
-    /**
-     * 发送邮件配置
-     */
-    'emailConfig' => array(
-        'host'           => 'smtp.exmail.qq.com',            // smtp服务器
-        'username'       => 'zhangkaixiang@house365.com',    // 发送邮件的地址(为防止拒收，建议把该地址加入白名单)
-        'password'       => 'xxxxxxxxxxxxxxx',               // 发送邮件的密码
-
-        'sendTo'   => array(
-            'fengxinyhyl@qq.com',
-        ),
-        // 缓存系统异常报警邮箱
-        'systemAlert'   => array(
-            'fengxinyhyl@qq.com',
-        ),
-        // 是否开启常规提醒，开启后出现error,critical等类型错误会发送提醒邮件
-        'normalRemind'  => true,
-        // 常规提醒的时间间隔(秒)
-        'normalInterval' => 86400,
     ),
 
     /**

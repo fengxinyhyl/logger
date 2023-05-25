@@ -48,16 +48,15 @@ class Sms
         $redis->set($errorCountKey, $errorCount, 3600);
 
         if ($errorCount >= $condition * ($sendCount + 1)) {
+            $sendCount += 1;
+            $redis->set($sendCountKey, $sendCount, 3600);
             if (is_array($phones)) {
                 $phones = trim(implode(',', $phones));
             }
             $hour = date('H');
             $msg  = date('Y-m-d H:i:s') . ", 项目：{$this->projectName} 从 {$hour} 点开始, 发生错误 {$errorCount} 次, 报警条件为 {$condition} 次, 需要立即处理！";
             $url  = "http://mysms.house365.com/index.php/Interface/apiSendMobil/jid/145/depart/1/city/nj/mobileno/" . $phones . "/?msg=" . urlencode($msg);
-
             $response  = $this->curl_get_contents($url);
-            $sendCount += 1;
-            $redis->set($sendCountKey, $sendCount, 3600);
             if ($sendCount >= 3) {
                 Logger::getLogger()->alert('系统发生严重错误');
             }
