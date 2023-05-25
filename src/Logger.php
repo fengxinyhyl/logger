@@ -13,6 +13,7 @@ use Monolog\Formatter\LogstashFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as Monolog;
 use Monolog\Processor\IntrospectionProcessor;
+use Monolog\Processor\WebProcessor;
 
 /**
  * 日志模块
@@ -103,7 +104,12 @@ class Logger
     /**
      * @var Monolog
      */
-    private $log = null;
+    private $commonLog = null;
+    /**
+     * @var Monolog
+     */
+    private $systemLog = null;
+
 
     /**
      * 单例模式
@@ -142,8 +148,9 @@ class Logger
      * @author zhangkxiang
      * @editor
      */
-    public function getLogItem(){
-        return $this->log;
+    public function getLogItem()
+    {
+        return $this->systemLog;
     }
 
 
@@ -237,6 +244,18 @@ class Logger
         return $this->init;
     }
 
+    /**
+     * 获取日志对象实例
+     * @return mixed
+     */
+    public function getUseAge($isSystem = false)
+    {
+        if($isSystem){
+            return $this->systemLog;
+        }
+        return $this->commonLog;
+    }
+
 
     /**
      * notes:   在系统日志中添加请求参数
@@ -245,11 +264,26 @@ class Logger
      * @author: zhangkaixiang
      * @editor:
      */
-    public function buildParams()
+    public function buildParams($params)
     {
-        $params = $_REQUEST;
-        $this->log->pushProcessor(function ($record) use ($params) {
+        $this->systemLog->pushProcessor(function ($record) use ($params) {
             $record['extra']['params'] = $params;
+            return $record;
+        });
+    }
+
+    /**
+     * notes:   在系统日志中添加返回值
+     * @create: 2019/7/12 9:18
+     * @update: 2019/7/12 9:18
+     * @author: zhangkaixiang
+     * @editor:
+     */
+    public function buildResponse($runTime, $response)
+    {
+        $this->systemLog->pushProcessor(function ($record) use ($runTime, $response) {
+            $record['extra']['runTime']  = $runTime;
+            $record['extra']['response'] = $response;
             return $record;
         });
     }
@@ -263,7 +297,7 @@ class Logger
     public function debug($msg, array $context = array())
     {
         try {
-            @$this->log->debug($msg, $context);
+            @$this->getUseAge()->debug($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -272,7 +306,7 @@ class Logger
     public function info($msg, array $context = array())
     {
         try {
-            @$this->log->info($msg, $context);
+            @$this->getUseAge()->info($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -281,7 +315,7 @@ class Logger
     public function notice($msg, array $context = array())
     {
         try {
-            @$this->log->notice($msg, $context);
+            @$this->getUseAge()->notice($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -290,7 +324,7 @@ class Logger
     public function warning($msg, array $context = array())
     {
         try {
-            @$this->log->warning($msg, $context);
+            @$this->getUseAge()->warning($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -299,7 +333,7 @@ class Logger
     public function error($msg, array $context = array())
     {
         try {
-            @$this->log->error($msg, $context);
+            @$this->getUseAge()->error($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -309,7 +343,7 @@ class Logger
     public function critical($msg, array $context = array())
     {
         try {
-            @$this->log->critical($msg, $context);
+            @$this->getUseAge()->critical($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -319,7 +353,7 @@ class Logger
     public function alert($msg, array $context = array())
     {
         try {
-            @$this->log->alert($msg, $context);
+            @$this->getUseAge()->alert($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -329,7 +363,7 @@ class Logger
     public function emergency($msg, array $context = array())
     {
         try {
-            @$this->log->emergency($msg, $context);
+            @$this->getUseAge()->emergency($msg, $context);
         } catch (\Exception $e) {
 
         }
@@ -387,19 +421,39 @@ class Logger
         $stdoutHandler = new StreamHandler('php://stdout', Monolog::DEBUG);
         $stdoutHandler->setFormatter($formatter);
 
-        $this->log = new Monolog('main');
-        $this->log->pushHandler($stdoutHandler);
-        $this->log->pushHandler($fileHandler);
+        $this->commonLog = new Monolog('common');
+        $this->commonLog->pushHandler($stdoutHandler);
+        $this->commonLog->pushHandler($fileHandler);
 
 
         // 获取本次请求的唯一id,并添加到所有的日志句柄中
         $requestId = $this->requestId = $this->getCommonSDK()->getRequestId();
-        $this->log->pushProcessor(function ($record) use ($requestId) {
+        $this->commonLog->pushProcessor(function ($record) use ($requestId) {
             $record['extra']['requestId']   = $requestId;
             $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $record['extra']['projectName'] = $this->projectName;
             return $record;
         });
+        // 添加打印日志的位置
+        $this->commonLog->pushProcessor(new IntrospectionProcessor(Monolog::DEBUG, array(), 1));
+
+        $this->systemLog = new Monolog('system');
+        $this->systemLog->pushHandler($stdoutHandler);
+        $this->systemLog->pushHandler($fileHandler);
+        $this->systemLog->pushProcessor(function ($record) use ($requestId) {
+            $record['extra']['requestId']   = $requestId;
+            $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
+            $record['extra']['projectName'] = $this->projectName;
+            return $record;
+        });
+        $this->systemLog->pushProcessor(new WebProcessor(null, array(
+            'url'         => 'REQUEST_URI',
+            'real_ip'     => 'HTTP_X_FORWARDED_FOR',    // 获取真实的ip地址，转发地址以逗号分隔
+            'http_method' => 'REQUEST_METHOD',
+            'server'      => 'SERVER_NAME',
+            'referrer'    => 'HTTP_REFERER',
+        )));
+
     }
 
 
