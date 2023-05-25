@@ -135,6 +135,19 @@ class Logger
 
 
     /**
+     * notes  返回monolog对象
+     * @return Monolog|null
+     * @create 2023/5/25 16:31
+     * @update 2023/5/25 16:31
+     * @author zhangkxiang
+     * @editor
+     */
+    public function getLogItem(){
+        return $this->log;
+    }
+
+
+    /**
      * notes: 根据配置信息设置logger
      * @param array $config
      * @throws LoggerException
@@ -208,7 +221,6 @@ class Logger
 
         $this->init = true;
         $this->initLog();
-        $this->buildParams();
     }
 
 
@@ -233,7 +245,7 @@ class Logger
      * @author: zhangkaixiang
      * @editor:
      */
-    private function buildParams()
+    public function buildParams()
     {
         $params = $_REQUEST;
         $this->log->pushProcessor(function ($record) use ($params) {
