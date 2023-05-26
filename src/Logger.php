@@ -89,6 +89,7 @@ class Logger
 
     // 是否初始化
     private $init = false;
+    private $isSystem = false;
 
     /**
      * @var Sms
@@ -137,20 +138,6 @@ class Logger
             self::$instance = new self();
         }
         return self::$instance;
-    }
-
-
-    /**
-     * notes  返回monolog对象
-     * @return Monolog|null
-     * @create 2023/5/25 16:31
-     * @update 2023/5/25 16:31
-     * @author zhangkxiang
-     * @editor
-     */
-    public function getLogItem()
-    {
-        return $this->systemLog;
     }
 
 
@@ -244,13 +231,18 @@ class Logger
         return $this->init;
     }
 
+    public function system(){
+        $this->isSystem = true;
+        return $this;
+    }
+
     /**
      * 获取日志对象实例
      * @return mixed
      */
-    public function getUseAge($isSystem = false)
+    public function getUseAge()
     {
-        if($isSystem){
+        if($this->isSystem){
             return $this->systemLog;
         }
         return $this->commonLog;

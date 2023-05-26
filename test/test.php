@@ -19,7 +19,7 @@ try{
     Logger::getLogger()->error('ccc');
     Logger::getLogger()->buildParams(array('name' => 'aaa'));
     Logger::getLogger()->buildResponse(1, array('name' => 'aaa'));
-    Logger::getLogger()->getUseAge(true)->critical('ddd');
+    Logger::getLogger()->system()->critical('ddd');
     Logger::getLogger()->warning('aaaa', $data);
 
 }catch (\Logger\LoggerException $e){
