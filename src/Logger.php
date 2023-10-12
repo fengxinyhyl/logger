@@ -56,6 +56,8 @@ class Logger
      */
     private $projectName = 'user_center';
 
+    private $appDebug = false;
+
     /**
      * redis缓存配置
      * 日志传送的redis数据库
@@ -155,9 +157,18 @@ class Logger
         if (empty($config) or !is_array($config)) {
             throw new LoggerException('请传入配置参数');
         }
+
+        // 0.是否开启debug模式
+        if (isset($config['appDebug']) and is_bool($config['appDebug'])) {
+            $this->appDebug = $config['appDebug'];
+        }
+
         // 1.项目名称
         if (isset($config['projectName']) and is_string($config['projectName'])) {
             $this->projectName = strtolower($config['projectName']);
+            if ($this->appDebug) {
+                $this->projectName .= '_debug';
+            }
         } else {
             throw new LoggerException('配置信息，projectName不合法');
         }
@@ -231,7 +242,8 @@ class Logger
         return $this->init;
     }
 
-    public function system(){
+    public function system()
+    {
         $this->isSystem = true;
         return $this;
     }
@@ -242,7 +254,7 @@ class Logger
      */
     public function getUseAge()
     {
-        if($this->isSystem){
+        if ($this->isSystem) {
             return $this->systemLog;
         }
         return $this->commonLog;
@@ -393,29 +405,34 @@ class Logger
 //        $formatter = new LogstashFormatter($this->projectName, '127.0.0.1', '', '', 1);
         $formatter = new JsonFormatter();
 
-        /**
-         * 本地文件处理器
-         */
-        $logPath     = $this->getCommonSDK()->getLogPath($this->logDir);
-        $fileHandler = new StreamHandler($logPath, Monolog::DEBUG);
+        if ($this->appDebug) {
+            /**
+             * 本地文件处理器
+             */
+            $logPath     = $this->getCommonSDK()->getLogPath($this->logDir);
+            $fileHandler = new StreamHandler($logPath, Monolog::DEBUG);
 
-        /**
-         * tmp日志处理，用来日志抓取脚本同步到日志服务器
-         */
-        $tmpLog = $this->logDir . '/tmp.log';
-        if (!file_exists($logPath)) {
-            // 如果文件不存在，则说明已经已经超过一个小时，清理tmp日志
-            if (file_exists($tmpLog)) {
-                @unlink($tmpLog);
+            /**
+             * tmp日志处理，用来日志抓取脚本同步到日志服务器
+             */
+            $tmpLog = $this->logDir . '/tmp.log';
+            if (!file_exists($logPath)) {
+                // 如果文件不存在，则说明已经已经超过一个小时，清理tmp日志
+                if (file_exists($tmpLog)) {
+                    @unlink($tmpLog);
+                }
             }
         }
+
 
         $stdoutHandler = new StreamHandler('php://stdout', Monolog::DEBUG);
         $stdoutHandler->setFormatter($formatter);
 
         $this->commonLog = new Monolog('common');
         $this->commonLog->pushHandler($stdoutHandler);
-        $this->commonLog->pushHandler($fileHandler);
+        if (isset($fileHandler)) {
+            $this->commonLog->pushHandler($fileHandler);
+        }
 
 
         // 获取本次请求的唯一id,并添加到所有的日志句柄中
@@ -429,9 +446,12 @@ class Logger
         // 添加打印日志的位置
         $this->commonLog->pushProcessor(new IntrospectionProcessor(Monolog::DEBUG, array(), 1));
 
+        // 添加web信息
         $this->systemLog = new Monolog('system');
         $this->systemLog->pushHandler($stdoutHandler);
-        $this->systemLog->pushHandler($fileHandler);
+        if (isset($fileHandler)) {
+            $this->systemLog->pushHandler($fileHandler);
+        }
         $this->systemLog->pushProcessor(function ($record) use ($requestId) {
             $record['extra']['requestId']   = $requestId;
             $record['extra']['ip']          = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
