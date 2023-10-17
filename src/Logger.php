@@ -56,6 +56,10 @@ class Logger
      */
     private $projectName = 'user_center';
 
+    /**
+     * 是否开启debug模式
+     * debug模式下，会在项目名称后面加上_debug
+     */
     private $appDebug = false;
 
     /**
@@ -244,7 +248,7 @@ class Logger
 
     public function system($used = true)
     {
-        $this->isSystem = true;
+        $this->isSystem = $used;
         return $this;
     }
 
