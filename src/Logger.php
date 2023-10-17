@@ -242,7 +242,7 @@ class Logger
         return $this->init;
     }
 
-    public function system()
+    public function system($used = true)
     {
         $this->isSystem = true;
         return $this;
